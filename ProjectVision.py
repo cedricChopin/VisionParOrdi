@@ -24,7 +24,7 @@ def histo(im, bounds = None):
 
 #Prend les match et les histogrammes associés
 #Retourne le pourcentage de correspondance selon la distance et les couleurs
-'''def matchRate(matches, histosIm, histosLogo):
+def matchRateMatches(matches):
     minDist = 99
 
     for m in matches:
@@ -32,23 +32,12 @@ def histo(im, bounds = None):
 
     correspondance = 1-minDist/100
 
-    histoBDiff = 0;
-    histoGDiff = 0;
-    histoRDiff = 0;
+    return correspondance
 
-    (histoImB,histoImG, histoImR) = histosIm
-    (histoLogoB,histoLogoG, histoLogoR) = histosIm
 
-    for i in len(histoImB):
-        histoBDiff += abs(histoImB[i] - histoLogoB[i])
-        histoGDiff += abs(histoImG[i] - histoLogoG[i])
-        histoRDiff += abs(histoImR[i] - histoLogoR[i])
-
-    histoDiff = (histoBDiff/len(histoImB) + histoGDiff/len(histoImG) + histoRDiff/len(histoImR))/3
-
-    return (correspondance, histoDiff)
-'''
-def matchRate(histosIm, histosLogo):
+#Prend les histogrammes des deux images et les compare
+#Retourne la correspondance
+def matchRateHisto(histosIm, histosLogo, nbPix):
     histoBDiff = 0;
     histoGDiff = 0;
     histoRDiff = 0;
@@ -59,17 +48,11 @@ def matchRate(histosIm, histosLogo):
     size = len(histoImB)
 
     for i in range(size):
-        histoBDiff += abs(histoImB[i] - histoLogoB[i])
-        histoGDiff += abs(histoImG[i] - histoLogoG[i])
-        histoRDiff += abs(histoImR[i] - histoLogoR[i])
+        histoBDiff += min(histoImB[i], histoLogoB[i])
+        histoGDiff += min(histoImG[i], histoLogoG[i])
+        histoRDiff += min(histoImR[i], histoLogoR[i])
 
-    print(histoBDiff/size)
-    print(histoGDiff/size)
-    print(histoRDiff/size)
-
-    histoDiff = ((histoBDiff/size) + (histoGDiff/size) + (histoRDiff/size))/3
-    return histoDiff
-
+    return ((histoBDiff/nbPix) + (histoGDiff/nbPix) +(histoRDiff/nbPix))/3
 
 def progressbar(it, prefix="", size=60, file=sys.stdout):
     count = len(it)
@@ -90,14 +73,28 @@ for i in progressbar(range(100), "Computing : ", 40):
     execution_time = format(time.time() - a,'.2f')
     #print(execution_time)
 
-test = cv2.imread("./Logo/test.jpg")
-test = cv2.resize(test, (int(test.shape[1]/2),int(test.shape[0]/2)))
+test = cv2.imread("./Logo/WHIIITE.png")
+test = cv2.resize(test, (1200,800))
 
 test2 = cv2.imread("./Logo/test2.jpg")
-test2 = cv2.resize(test2, (int(test2.shape[1]/2),int(test2.shape[0]/2)))
+test2 = cv2.resize(test2, (1200,800))
+
+test3 = cv2.imread("./Logo/test3.jpg")
+test3 = cv2.resize(test3, (1200,800))
+
+test4 = cv2.imread("./Logo/black.png")
+test4 = cv2.resize(test4, (1200,800))
+
+test5 = cv2.imread("./Logo/YEEEEEYE.jpg")
+test5 = cv2.resize(test5, (1200,800))
 
 h = histo(test)
 h2 = histo(test2)
+h3 = histo(test3)
+h4 = histo(test4)
+h5 = histo(test5)
 
-r = matchRate(h, h2)
-print(r)
+
+r = matchRateHisto(h, h4, 1200*800)
+
+print(str((1-(r/3*100))*100) + " de difference")
