@@ -3,6 +3,7 @@ import numpy as np
 import math
 import argparse
 from os import walk
+from os import path
 import sys
 import time
 
@@ -100,6 +101,18 @@ def Draw(Images, name, dataset):
                         angle_bas = getAngle(dst[0][0], dst[1][0], dst[2][0])
                         angle_haut = getAngle(pts[2][0], pts[3][0], pts[0][0])
                         if (60 < angle_bas < 120) and (60 < angle_haut < 120):
+                            bottomLeftCornerOfText = (int(dst[0][0][0]), int(dst[0][0][1]))
+                            fontScale = 5
+                            fontColor = (0, 0, 255)
+                            thickness = 3
+                            lineType = 2
+                            img_dataset = cv2.putText(img_dataset, name[i],
+                                                bottomLeftCornerOfText,
+                                                1,
+                                                fontScale,
+                                                fontColor,
+                                                thickness,
+                                                lineType)
                             img_dataset = cv2.polylines(img_dataset, [np.int32(dst)], True, [int(col[0]), int(col[1]), int(col[2])],
                                                   3,
                                                   8)
@@ -112,17 +125,19 @@ name = list()
 Logos = "Logo/Clair/"
 DataSet = "Logo/Sur photos/"
 #DataSet = "Logo/Dessins/"
-for (repertoire, sousRepertoires, fichiers) in walk(Logos):
-    for nameFile in fichiers:
-        if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
-            pathImg = Logos + nameFile
-            name.append(nameFile.split('.')[0])
-            Images.append(pathImg)
+for (root, sousRep, fic) in walk(Logos):
+    for dirname in sousRep:
+        for (repertoire, sousRepertoires, fichiers) in walk(path.join(root, dirname)):
+            for nameFile in fichiers:
+                if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
+                    pathImg = repertoire + '/' + nameFile
+                    name.append(dirname)
+                    Images.append(pathImg)
 
 for (repertoire, sousRepertoires, fichiers) in walk(DataSet):
     for nameFile in fichiers:
         if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
-            pathImg = DataSet + nameFile
+            pathImg = repertoire + '/' + nameFile
             name.append(nameFile.split('.')[0])
             Images_DataSet.append(pathImg)
 
