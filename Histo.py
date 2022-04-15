@@ -9,9 +9,13 @@ import sys
 def histo(im, bounds = None):
     mask = None
     if bounds != None:
-        mask = np.zeros(im.shape[:2])
-        cv2.rectangle(mask, bounds[0], bounds[2], (255,255,255), -1)
-
+        gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+        mask = np.zeros_like(gray)
+        #cv2.rectangle(mask, bounds[0], bounds[2], (255,255,255), -1)
+        #Bounds : (xmin, xmax, ymin, ymax)
+        startPoint = (bounds[0], bounds[2])
+        endPoint = (bounds[1], bounds[3])
+        mask[startPoint[0]:endPoint[0], startPoint[1]:endPoint[1]] = 255
     histB = cv2.calcHist([im],[0], mask,[256],[0,256])
     histG = cv2.calcHist([im],[1], mask,[256],[0,256])
     histR = cv2.calcHist([im],[2], mask,[256],[0,256])
