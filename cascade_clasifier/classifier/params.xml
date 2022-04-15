@@ -2,7 +2,7 @@
 <opencv_storage>
 <params>
   <stageType>BOOST</stageType>
-  <featureType>HOG</featureType>
+  <featureType>HAAR</featureType>
   <height>24</height>
   <width>24</width>
   <stageParams>
@@ -14,5 +14,6 @@
     <maxWeakCount>100</maxWeakCount></stageParams>
   <featureParams>
     <maxCatCount>0</maxCatCount>
-    <featSize>36</featSize></featureParams></params>
+    <featSize>1</featSize>
+    <mode>BASIC</mode></featureParams></params>
 </opencv_storage>
