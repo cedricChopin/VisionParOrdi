@@ -61,7 +61,6 @@ def Draw(Images, name, dataset):
     img_lst = list()
     img_color = list()
     orb_img = cv2.ORB_create(nfeatures=10000, edgeThreshold=1)
-    orb_vid = cv2.ORB_create(nfeatures=10000)
     bf = cv2.BFMatcher(cv2.NORM_HAMMING)
     if Images is not None:
         for image in Images:
@@ -80,18 +79,16 @@ def Draw(Images, name, dataset):
     # bf.train()
     for img in dataset:
         img_dataset = cv2.imread(img, cv2.IMREAD_COLOR)
+        if (img_dataset.shape[0] < 1080 and img_dataset.shape[1] < 1920) or (img_dataset.shape[0] > 1500 and img_dataset.shape[1] > 2500):
+            img_dataset = cv2.resize(img_dataset, (1920, 1080), interpolation=cv2.INTER_CUBIC)
         kp2, des2 = orb_img.detectAndCompute(img_dataset, None)
-
-        good = GoodPointsTrain(des2, bf)
-
-        good2 = GoodPoints(des_list[0], des2, bf)
         # Partie Homography
-        res = cv2.drawMatches(img_lst[0], kp_lst[0], img_dataset, kp2, good2, None, flags=2)
-        cv2.imshow("Matches", res)
+
         logoAlreadyCaptured = list()
         for index_kp in range(len(kp_lst)):
             goodpoints = GoodPoints(des_list[index_kp], des2, bf)
-            if len(goodpoints) > 3:
+            print("Nb good : " + str(len(goodpoints)) + "; name : " + name[index_kp])
+            if len(goodpoints) > 25:
                 sch_pts = np.float32([kp_lst[index_kp][m.queryIdx].pt for m in goodpoints]).reshape(-1, 1, 2)
                 img_pts = np.float32([kp2[m.trainIdx].pt for m in goodpoints]).reshape(-1, 1, 2)
                 matrix, mask = cv2.findHomography(sch_pts, img_pts, cv2.RANSAC, 5.0)
@@ -110,26 +107,30 @@ def Draw(Images, name, dataset):
                     angle_bas = getAngle(dst[0][0], dst[1][0], dst[2][0])
                     angle_haut = getAngle(pts[2][0], pts[3][0], pts[0][0])
                     if (70 < angle_bas < 110) and (70 < angle_haut < 110):
-                        isANewLogo = True
-                        if isANewLogo:
-                            logoAlreadyCaptured.append(box)
-                            cv2.drawContours(img_dataset, [box], 0,[int(col[0]), int(col[1]), int(col[2])], 2)
-                            bottomLeftCornerOfText = (int(dst[0][0][0]), int(dst[0][0][1]))
-                            fontScale = 3
-                            fontColor = (0, 0, 255)
-                            thickness = 3
-                            lineType = 2
-                            img_dataset = cv2.putText(img_dataset, name[index_kp],
-                                                      bottomLeftCornerOfText,
-                                                      1,
-                                                      fontScale,
-                                                      fontColor,
-                                                      thickness,
-                                                      lineType)
+                        logoAlreadyCaptured.append(box)
+                        x_offset = y_offset = 50
+                        logoResized = cv2.resize(img_lst[index_kp],
+                                                 (int(img_dataset.shape[1] / 10), int(img_dataset.shape[0] / 10)))
+                        img_dataset[y_offset:y_offset + logoResized.shape[0],
+                        x_offset:x_offset + logoResized.shape[1]] = logoResized
+                        cv2.drawContours(img_dataset, [box], 0, [int(col[0]), int(col[1]), int(col[2])], 2)
+                        bottomLeftCornerOfText = (int(dst[0][0][0]), int(dst[0][0][1]))
+                        fontScale = 3
+                        fontColor = (150, 150, 150)
+                        thickness = 3
+                        lineType = 2
+                        img_dataset = cv2.putText(img_dataset, name[index_kp],
+                                                  bottomLeftCornerOfText,
+                                                  1,
+                                                  fontScale,
+                                                  fontColor,
+                                                  thickness,
+                                                  lineType)
 
 
         cv2.imshow("Scene", img_dataset)
         cv2.waitKey(0)
+
 
 Images = list()
 Images_DataSet = list()
