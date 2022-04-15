@@ -81,6 +81,7 @@ def Draw(Images, name, dataset):
         img_dataset = cv2.imread(img, cv2.IMREAD_COLOR)
         if (img_dataset.shape[0] < 1080 and img_dataset.shape[1] < 1920) or (img_dataset.shape[0] > 1500 and img_dataset.shape[1] > 2500):
             img_dataset = cv2.resize(img_dataset, (1920, 1080), interpolation=cv2.INTER_CUBIC)
+        cleanCopy = img_dataset
         kp2, des2 = orb_img.detectAndCompute(img_dataset, None)
         # Partie Homography
 
@@ -100,6 +101,7 @@ def Draw(Images, name, dataset):
                                       [img_lst[index_kp].shape[1] - 1, 0]]).reshape(-1, 1, 2)
                     dst = cv2.perspectiveTransform(pts, matrix)
                     rect = cv2.minAreaRect(dst)
+
                     box = cv2.boxPoints(rect)
                     box = np.int0(box)
 
@@ -107,7 +109,14 @@ def Draw(Images, name, dataset):
                     angle_bas = getAngle(dst[0][0], dst[1][0], dst[2][0])
                     angle_haut = getAngle(pts[2][0], pts[3][0], pts[0][0])
                     if (70 < angle_bas < 110) and (70 < angle_haut < 110):
-                        logoAlreadyCaptured.append(box)
+                        xmin = min([pt[0] for pt in box])
+                        xmax = max([pt[0] for pt in box])
+                        ymin = min([pt[1] for pt in box])
+                        ymax = max([pt[1] for pt in box])
+                        boundingBox = (ymin, ymax, xmin, xmax)
+                        logoAlreadyCaptured.append(boundingBox)
+                        imageCut = cleanCopy[int(ymin):int(ymax), int(xmin):int(xmax)]
+                        cv2.imshow("ImageCut", imageCut)
                         x_offset = y_offset = 50
                         logoResized = cv2.resize(img_lst[index_kp],
                                                  (int(img_dataset.shape[1] / 10), int(img_dataset.shape[0] / 10)))
