@@ -9,6 +9,19 @@ import time
 import Histo
 import Matches
 
+def progressbar(it, prefix="", size=60, file=sys.stdout):
+    count = len(it)
+    def show(j):
+        x = int(size*j/count)
+        file.write("%s[%s%s] %i/%i\r" % (prefix, "#"*x, "."*(size-x), j, count))
+        file.flush()
+    show(0)
+    for i, item in enumerate(it):
+        yield item
+        show(i+1)
+    file.write("\n")
+    file.flush()
+
 
 # Fonction permettant de trouver les logos dans une image
 def Draw(Images, name, dataset):
@@ -16,6 +29,9 @@ def Draw(Images, name, dataset):
     img_color = list()
     orb_img = cv2.ORB_create(nfeatures=10000, edgeThreshold=1)
     bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+
+    outputImg = []
+
     if Images is not None:
         for image in Images:
             img = cv2.imread(image, cv2.IMREAD_COLOR)
@@ -28,7 +44,7 @@ def Draw(Images, name, dataset):
         kp, des = orb_img.detectAndCompute(image, None)
         des_list.append(des)
         kp_lst.append(kp)
-    for img in dataset:
+    for img in progressbar(dataset, "Analysing images ... : ", 60):
         img_dataset = cv2.imread(img, cv2.IMREAD_COLOR)
         if (img_dataset.shape[0] < 1080 and img_dataset.shape[1] < 1920) or (
                 img_dataset.shape[0] > 1500 and img_dataset.shape[1] > 2500):
@@ -40,14 +56,14 @@ def Draw(Images, name, dataset):
         bestMatche = list()
         bestCor = 0
         bestLogo = ''
-        print("______________________________________")
+        #print("______________________________________")
         for index_kp in range(len(kp_lst)):
             goodpoints = Matches.GoodPoints(des_list[index_kp], des2, bf)
             cor = Histo.matchRateMatches(goodpoints)
             if cor > bestCor:
                 bestCor = cor
                 bestLogo = name[index_kp]
-            print("cor: " + str(cor) + "; name : " + name[index_kp])
+            #print("cor: " + str(cor) + "; name : " + name[index_kp])
             # print("Nb good : " + str(len(goodpoints)) + "; name : " + name[index_kp])
             if len(goodpoints) > 25:
                 sch_pts = np.float32([kp_lst[index_kp][m.queryIdx].pt for m in goodpoints]).reshape(-1, 1, 2)
@@ -90,7 +106,7 @@ def Draw(Images, name, dataset):
                         # Récupération du pourcentage de différence entre deux histogrammes
                         r = Histo.matchRateHisto(himg, hLogo, imgResized.shape[0] * imgResized.shape[1])
                         bestMatche.append((r, index_kp, col, box))
-                        print(str((1 - r) * 100) + " de difference")
+                        #print(str((1 - r) * 100) + " de difference")
         bottomLeftCornerOfTextCompa = (int(50), int(50))
         bottomLeftCornerOfTextColor = (int(50), int(100))
         bottomLeftCornerOfTextLogo = (int(50), int(150))
@@ -135,8 +151,8 @@ def Draw(Images, name, dataset):
                                   fontColor,
                                   thickness,
                                   lineType)
-        cv2.imshow("Scene", img_dataset)
-        cv2.waitKey(0)
+        outputImg.append(img_dataset)
+    return outputImg
 
 
 # Fonction permettant de récuperer les logos ainsi que le dataset
@@ -168,10 +184,16 @@ def main():
     Logos = "Logo/Clair/"
     DataSet = "Logo/SurPhotos/"
     Images, name, Images_DataSet = getImages(Logos, DataSet)
-    Draw(Images, name, Images_DataSet)
+    output = Draw(Images, name, Images_DataSet)
 
     execution_time = format(time.time() - a, '.2f')
-    print("temps d'execution : " + str(execution_time))
+    print("temps d'execution : " + str(execution_time) + "sec")
+
+    time.sleep(3)
+
+    for img in output:
+        cv2.imshow("results :", img)
+        cv2.waitKey(0)
 
 
 if __name__ == "__main__":
