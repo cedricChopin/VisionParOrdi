@@ -137,6 +137,7 @@ def Draw(Images, name, dataset):
                                   lineType)
         cv2.imshow("Scene", img_dataset)
         cv2.waitKey(0)
+<<<<<<< Updated upstream
 
 
 # Fonction permettant de récuperer les logos ainsi que le dataset
@@ -176,3 +177,28 @@ def main():
 
 if __name__ == "__main__":
     main()
+=======
+Images = list()
+Images_DataSet = list()
+name = list()
+Logos = "Logo/Clair/"
+DataSet = "Logo/SurPhotos/"
+#DataSet = "Logo/Dessins/"
+for (root, sousRep, fic) in walk(Logos):
+    for dirname in sousRep:
+        for (repertoire, sousRepertoires, fichiers) in walk(path.join(root, dirname)):
+            for nameFile in fichiers:
+                if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
+                    pathImg = repertoire + '/' + nameFile
+                    name.append(dirname)
+                    Images.append(pathImg)
+
+for (repertoire, sousRepertoires, fichiers) in walk(DataSet):
+    for nameFile in fichiers:
+        if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
+            pathImg = repertoire + '/' + nameFile
+            name.append(nameFile.split('.')[0])
+            Images_DataSet.append(pathImg)
+
+Draw(Images, name, Images_DataSet)
+>>>>>>> Stashed changes
