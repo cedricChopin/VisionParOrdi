@@ -37,8 +37,17 @@ def Draw(Images, name, dataset):
         kp2, des2 = orb_img.detectAndCompute(img_dataset, None)
         # Partie Homography
         # Itération sur chaque image
+        bestMatche = list()
+        bestCor = 0
+        bestLogo = ''
+        print("______________________________________")
         for index_kp in range(len(kp_lst)):
             goodpoints = Matches.GoodPoints(des_list[index_kp], des2, bf)
+            cor = Histo.matchRateMatches(goodpoints)
+            if cor > bestCor:
+                bestCor = cor
+                bestLogo = name[index_kp]
+            print("cor: " + str(cor) + "; name : " + name[index_kp])
             # print("Nb good : " + str(len(goodpoints)) + "; name : " + name[index_kp])
             if len(goodpoints) > 25:
                 sch_pts = np.float32([kp_lst[index_kp][m.queryIdx].pt for m in goodpoints]).reshape(-1, 1, 2)
@@ -57,7 +66,7 @@ def Draw(Images, name, dataset):
                     box = np.int0(box)
 
                     col = img_color[index_kp]
-                    #Filtre par angle pour prendre des régions cohérentes
+                    # Filtre par angle pour prendre des régions cohérentes
                     angle_bas = Matches.getAngle(dst[0][0], dst[1][0], dst[2][0])
                     angle_haut = Matches.getAngle(pts[2][0], pts[3][0], pts[0][0])
                     if (70 < angle_bas < 110) and (70 < angle_haut < 110):
@@ -66,7 +75,7 @@ def Draw(Images, name, dataset):
                         ymin = min([pt[1] for pt in box])
                         ymax = max([pt[1] for pt in box])
                         boundingBox = (ymin, ymax, xmin, xmax)
-                        #Calcul de l'histogramme de l'image trouvée et du logo à comparer
+                        # Calcul de l'histogramme de l'image trouvée et du logo à comparer
                         himg = Histo.histo(cleanCopy, boundingBox)
                         imgResized = cv2.resize(img_lst[index_kp], (int(ymax - ymin), int(xmax - xmin)))
                         hLogo = Histo.histo(imgResized)
@@ -80,30 +89,52 @@ def Draw(Images, name, dataset):
 
                         # Récupération du pourcentage de différence entre deux histogrammes
                         r = Histo.matchRateHisto(himg, hLogo, imgResized.shape[0] * imgResized.shape[1])
+                        bestMatche.append((r, index_kp, col, box))
                         print(str((1 - r) * 100) + " de difference")
-                        imageCut = cleanCopy[int(ymin):int(ymax), int(xmin):int(xmax)]
-                        cv2.imshow("ImageCut", imageCut)
-                        cv2.imshow("Logo trouvé", img_lst[index_kp])
-                        cv2.waitKey(0)
-                        x_offset = y_offset = 50
-                        logoResized = cv2.resize(img_lst[index_kp],
-                                                 (int(img_dataset.shape[1] / 10), int(img_dataset.shape[0] / 10)))
-                        img_dataset[y_offset:y_offset + logoResized.shape[0],
-                        x_offset:x_offset + logoResized.shape[1]] = logoResized
-                        cv2.drawContours(img_dataset, [box], 0, [int(col[0]), int(col[1]), int(col[2])], 2)
-                        bottomLeftCornerOfText = (int(dst[0][0][0]), int(dst[0][0][1]))
-                        fontScale = 3
-                        fontColor = (150, 150, 150)
-                        thickness = 3
-                        lineType = 2
-                        img_dataset = cv2.putText(img_dataset, name[index_kp],
-                                                  bottomLeftCornerOfText,
-                                                  1,
-                                                  fontScale,
-                                                  fontColor,
-                                                  thickness,
-                                                  lineType)
+        bottomLeftCornerOfTextCompa = (int(50), int(50))
+        bottomLeftCornerOfTextColor = (int(50), int(100))
+        bottomLeftCornerOfTextLogo = (int(50), int(150))
 
+        fontScale = 2
+        fontColor = (0, 255, 0)
+        thickness = 3
+        lineType = 2
+        if len(bestMatche) > 0:
+            best = min([tuple[0] for tuple in bestMatche])
+            bestTuple = [tuple for tuple in bestMatche if tuple[0] == best]
+
+            x_offset  = 50
+            y_offset = 200
+            logoResized = cv2.resize(img_lst[bestTuple[0][1]],
+                                     (int(img_dataset.shape[1] / 10), int(img_dataset.shape[0] / 10)))
+            img_dataset[y_offset:y_offset + logoResized.shape[0],
+            x_offset:x_offset + logoResized.shape[1]] = logoResized
+            cv2.drawContours(img_dataset, [bestTuple[0][3]], 0,
+                             [int(bestTuple[0][2][0]), int(bestTuple[0][2][1]), int(bestTuple[0][2][2])], 2)
+            img_dataset = cv2.putText(img_dataset, "Pourcentage compatibilite Color : " + str(bestTuple[0][0][0] * 100) + " %",
+                                      bottomLeftCornerOfTextColor,
+                                      1,
+                                      fontScale,
+                                      fontColor,
+                                      thickness,
+                                      lineType)
+
+
+        img_dataset = cv2.putText(img_dataset, "Pourcentage compatibilite Matches : " + str(bestCor * 100) + " %",
+                                  bottomLeftCornerOfTextCompa,
+                                  1,
+                                  fontScale,
+                                  fontColor,
+                                  thickness,
+                                  lineType)
+
+        img_dataset = cv2.putText(img_dataset, "Logo trouve : " + bestLogo,
+                                  bottomLeftCornerOfTextLogo,
+                                  1,
+                                  fontScale,
+                                  fontColor,
+                                  thickness,
+                                  lineType)
         cv2.imshow("Scene", img_dataset)
         cv2.waitKey(0)
 
