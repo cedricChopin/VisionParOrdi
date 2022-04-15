@@ -8,29 +8,6 @@ import sys
 import time
 import Histo
 
-a = time.time()
-
-
-def progressbar(it, prefix="", size=60, file=sys.stdout):
-    count = len(it)
-
-    def show(j):
-        x = int(size * j / count)
-        file.write("%s[%s%s] %i/%i\r" % (prefix, "#" * x, "." * (size - x), j, count))
-        file.flush()
-
-    show(0)
-    for i, item in enumerate(it):
-        yield item
-        show(i + 1)
-    file.write("\n")
-    file.flush()
-
-
-for i in progressbar(range(100), "Computing : ", 40):
-    time.sleep(0.01)
-    execution_time = format(time.time() - a, '.2f')
-    # print(execution_time)
 
 
 def GoodPointsTrain(img, bf):
@@ -141,30 +118,30 @@ def Draw(Images, name, dataset):
         cv2.imshow("Scene", img_dataset)
         cv2.waitKey(0)
 
+def getImages(Logos, DataSet):
 
-Images = list()
-Images_DataSet = list()
-name = list()
-Logos = "Logo/Clair/"
-DataSet = "Logo/Sur photos/"
-# DataSet = "Logo/Dessins/"
-for (root, sousRep, fic) in walk(Logos):
-    for dirname in sousRep:
-        for (repertoire, sousRepertoires, fichiers) in walk(path.join(root, dirname)):
-            for nameFile in fichiers:
-                if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
-                    pathImg = repertoire + '/' + nameFile
-                    name.append(dirname)
-                    Images.append(pathImg)
+    Images = list()
+    Images_DataSet = list()
+    name = list()
+    # DataSet = "Logo/Dessins/"
+    for (root, sousRep, fic) in walk(Logos):
+        for dirname in sousRep:
+            for (repertoire, sousRepertoires, fichiers) in walk(path.join(root, dirname)):
+                for nameFile in fichiers:
+                    if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
+                        pathImg = repertoire + '/' + nameFile
+                        name.append(dirname)
+                        Images.append(pathImg)
 
-for (repertoire, sousRepertoires, fichiers) in walk(DataSet):
-    for nameFile in fichiers:
-        if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
-            pathImg = repertoire + '/' + nameFile
-            name.append(nameFile.split('.')[0])
-            Images_DataSet.append(pathImg)
+    for (repertoire, sousRepertoires, fichiers) in walk(DataSet):
+        for nameFile in fichiers:
+            if nameFile.split('.')[1] == "jpg" or nameFile.split('.')[1] == "png":
+                pathImg = repertoire + '/' + nameFile
+                name.append(nameFile.split('.')[0])
+                Images_DataSet.append(pathImg)
+    return Images, name, Images_DataSet
 
-Draw(Images, name, Images_DataSet)
+
 
 
 
@@ -177,6 +154,10 @@ Draw(Images, name, Images_DataSet)
 
 def main():
     a = time.time()
+    Logos = "Logo/Clair/"
+    DataSet = "Logo/Sur photos/"
+    Images, name, Images_DataSet = getImages(Logos, DataSet)
+    Draw(Images, name, Images_DataSet)
     test = cv2.imread("./Logo/test.jpg")
     test = cv2.resize(test, (1200, 800))
 
